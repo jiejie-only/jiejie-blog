@@ -1,0 +1,23 @@
+# 密钥与本地数据（切勿提交）
+data/
+tools/.write-secret
+tools/.write-list.json
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 临时
+*.log
+.tmp-pw/
+_test_*.py
+_patch_*.py

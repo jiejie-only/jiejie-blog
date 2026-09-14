@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <title>写文章 · 杰杰的博客</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin/write.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>写文章</h1>
+      <p class="meta" id="who">正在检查登录状态…</p>
+    </div>
+    <div class="header-actions">
+      <a class="btn btn-ghost" href="/" target="_blank" rel="noopener">看博客</a>
+      <button class="btn-ghost" id="logout" type="button">退出</button>
+    </div>
+  </header>
+
+  <div class="gate hidden" id="gate">
+    <p>登录已过期，请重新登录。</p>
+    <a class="btn btn-primary" href="/admin/login">去登录</a>
+  </div>
+
+  <div class="wrap" id="app">
+    <section class="panel panel-list">
+      <h2>已发布 <span id="post-count"></span></h2>
+      <input class="search" id="filter" type="search" placeholder="筛选标题 / slug…">
+      <ul class="post-list-admin" id="post-list">
+        <li class="empty">加载中…</li>
+      </ul>
+      <div class="actions">
+        <button class="btn-ghost" id="new-btn" type="button">写新文章</button>
+        <button class="btn-ghost" id="import-btn" type="button">导入文件</button>
+        <button class="btn-ghost" id="import-folder-btn" type="button">导入文件夹</button>
+        <button class="btn-ghost" id="refresh-btn" type="button">刷新列表</button>
+      </div>
+      <input type="file" id="import-file" class="hidden" multiple
+             accept=".md,.markdown,.txt,.html,.htm,.docx,.zip,.png,.jpg,.jpeg,.gif,.webp,.svg,.bmp">
+      <input type="file" id="import-folder" class="hidden" webkitdirectory multiple>
+      <div class="import-box hidden" id="import-box">
+        <div class="import-head">
+          <strong>导入文件</strong>
+        </div>
+        <p class="import-hint">带图文章：选「导入文件夹」选中 md 所在目录，或同时多选 md + 图片。</p>
+        <ul class="import-list" id="import-list"></ul>
+        <div class="actions">
+          <button class="btn-primary" id="import-run" type="button">解析到编辑器</button>
+          <button class="btn-ghost" id="import-cancel" type="button">取消</button>
+        </div>
+        <div class="status" id="import-status"></div>
+        <p class="import-hint">解析后进入中间编辑区与右侧预览，确认无误再点「发布文章」才会写入站点。</p>
+      </div>
+    </section>
+
+    <section class="panel panel-editor">
+      <div class="mode-bar">
+        <span id="mode-text">新建文章</span>
+        <button class="btn-ghost hidden" id="cancel-edit" type="button">退出编辑</button>
+      </div>
+      <input type="hidden" id="original-slug">
+      <div class="row">
+        <label>
+          标题
+          <input id="title" type="text" placeholder="文章标题">
+        </label>
+        <label>
+          日期
+          <input id="date" type="date">
+        </label>
+        <label>
+          标签
+          <input id="tag" type="text" list="tag-options" placeholder="选择或输入新标签" maxlength="16" autocomplete="off">
+          <datalist id="tag-options">
+            <option>随笔</option>
+            <option>技术</option>
+            <option>安全</option>
+            <option>读书</option>
+            <option>生活</option>
+          </datalist>
+        </label>
+      </div>
+      <label>
+        <span class="label-row">
+          摘要（显示在目录里）
+          <button type="button" class="btn-mini" id="excerpt-gen">自动生成</button>
+        </span>
+        <input id="excerpt" type="text" maxlength="80" placeholder="留空发布时也会自动从正文提取">
+      </label>
+      <label>
+        正文（Markdown）
+        <textarea id="content" placeholder="## 小节标题&#10;&#10;普通段落。支持 **加粗**、*斜体*、`代码`、列表、引用、代码块。"></textarea>
+      </label>
+      <p class="toolbar-note">
+        写法示例：<code>## 标题</code> · <code>- 列表</code> · <code>&gt; 引用</code> · <code>``` 代码 ```</code>
+      </p>
+      <div class="actions">
+        <button class="btn-primary" id="save-btn" type="button">发布文章</button>
+        <button class="btn-danger hidden" id="delete-btn" type="button">删除此篇</button>
+        <button class="btn-ghost" id="draft-btn" type="button">存草稿</button>
+        <button class="btn-ghost" id="load-draft-btn" type="button">读草稿</button>
+      </div>
+      <div class="status" id="save-status"></div>
+      <div class="help">
+        新建：发布后写入 <code>posts/&lt;slug&gt;.html</code> 并更新目录。
+        编辑：点左侧「编辑」载入；保存会覆盖原文（改标题会换 slug）。
+        删除会同时移除页面文件与目录条目。
+        导入支持 <code>.md</code> / <code>.txt</code> / <code>.html</code> / <code>.docx</code> / <code>.zip</code>。
+        <strong>带相对路径图片时，请把正文和图片一起多选</strong>（或打成 zip）。
+      </div>
+    </section>
+
+    <section class="panel panel-preview">
+      <label>预览</label>
+      <div class="preview" id="preview" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <script src="/admin/write.js" defer></script>
+</body>
+</html>

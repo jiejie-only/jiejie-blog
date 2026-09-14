@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="杰杰的博客 — 个人写作、技术随笔与生活札记。安静阅读，认真记录。">
+  <meta name="author" content="杰杰">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>杰杰的博客 · 首页</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/main.js" defer></script>
+</head>
+<body>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <svg class="brand-seal" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="12" fill="#C4512B"/>
+          <rect x="5" y="5" width="54" height="54" rx="8" fill="none" stroke="#F3EFE6" stroke-width="2.5" opacity="0.9"/>
+          <text x="32" y="41" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#F3EFE6">杰</text>
+        </svg>
+        <span class="brand-text">
+          <span class="brand-name">杰杰的博客</span>
+          <span class="brand-tag">Personal Notes</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="打开导航菜单">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="site-nav" aria-label="主导航">
+        <a class="nav-link" href="index.html" aria-current="page">首页</a>
+        <a class="nav-link" href="posts.html">文章</a>
+        <a class="nav-link" href="about.html">关于</a>
+        <button class="theme-btn" id="theme-toggle" type="button" aria-label="切换主题" aria-pressed="false">
+          <svg data-icon="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" hidden>
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+          </svg>
+          <svg data-icon="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="欢迎">
+      <svg class="hero-deco" viewBox="0 0 400 400" aria-hidden="true">
+        <defs>
+          <linearGradient id="inkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#2F5C48" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#C4512B" stop-opacity="0.15"/>
+          </linearGradient>
+        </defs>
+        <circle cx="200" cy="200" r="160" fill="none" stroke="url(#inkGrad)" stroke-width="1"/>
+        <circle cx="200" cy="200" r="120" fill="none" stroke="url(#inkGrad)" stroke-width="0.8" stroke-dasharray="4 6"/>
+        <circle cx="200" cy="200" r="70" fill="none" stroke="#C4512B" stroke-width="0.6" opacity="0.35"/>
+        <path d="M40 260 C120 180, 200 320, 360 140" fill="none" stroke="#2F5C48" stroke-width="1.2" opacity="0.3"/>
+        <path d="M60 300 C140 220, 240 340, 380 180" fill="none" stroke="#C4512B" stroke-width="0.8" opacity="0.25"/>
+        <circle cx="320" cy="100" r="4" fill="#C4512B" opacity="0.5"/>
+        <circle cx="90" cy="120" r="2.5" fill="#2F5C48" opacity="0.4"/>
+      </svg>
+
+      <div class="hero-copy reveal">
+        <p class="eyebrow">Welcome · 自留地</p>
+        <h1 class="hero-title">把想说的话，<br>写成<em>可被搜到</em>的文字。</h1>
+        <p class="hero-lead">
+          这里是杰杰的个人博客：记录技术踩坑、读书笔记与日常观察。
+          页面尽量克制，阅读尽量舒服，部署尽量安全。
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="posts.html">开始阅读</a>
+          <a class="btn btn-ghost" href="about.html">认识杰杰</a>
+        </div>
+      </div>
+
+      <aside class="hero-side reveal" aria-label="站点标识">
+        <svg class="hero-seal" viewBox="0 0 100 100" role="img" aria-label="杰杰印章">
+          <rect x="2" y="2" width="96" height="96" rx="8" fill="#C4512B"/>
+          <rect x="9" y="9" width="82" height="82" rx="4" fill="none" stroke="#F3EFE6" stroke-width="2.5" opacity="0.92"/>
+          <text x="50" y="42" text-anchor="middle" font-family="Georgia, 'Songti SC', serif" font-size="22" font-weight="700" fill="#F3EFE6">杰杰</text>
+          <text x="50" y="68" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#F3EFE6" opacity="0.85">BLOG</text>
+        </svg>
+        <p class="hero-side-label">杰杰的博客</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><b id="stat-count">7</b><span>文章</span></div>
+          <div class="hero-stat"><b id="stat-year">2026</b><span>起笔</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section reveal" aria-labelledby="featured-title">
+      <div class="section-head">
+        <div class="section-title-wrap">
+          <span class="section-num">01</span>
+          <h2 class="section-title" id="featured-title">近期精选</h2>
+        </div>
+        <a class="section-more" href="posts.html">全部文章 →</a>
+      </div>
+      <div class="feature-grid">
+        <a class="feature-card featured" href="posts/畅捷通t-keyinfolist-aspx-sql漏洞预警.html">
+          <div>
+            <p class="feature-kicker">置顶 · 随笔</p>
+            <h3 class="feature-title">畅捷通T+ KeyInfoList.aspx SQL漏洞预警</h3>
+            <p class="feature-desc">由于畅捷通T+的KeyInfoList.aspx接口处未对用户的输入进行过滤和校验，未经身份验证的攻击者除了可以利用 SQL 注入漏洞获取数据库中的信息</p>
+          </div>
+          <div class="feature-foot">
+            <span>2026-09-14</span>
+            <span>约 1 分钟</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section reveal" aria-labelledby="latest-title">
+      <div class="section-head">
+        <div class="section-title-wrap">
+          <span class="section-num">02</span>
+          <h2 class="section-title" id="latest-title">最新文章</h2>
+        </div>
+        <a class="section-more" href="posts.html">目录视图 →</a>
+      </div>
+      <ul class="post-list">
+        <li class="post-item">
+          <time class="post-date" datetime="2026-09-14">2026-09-14</time>
+          <div class="post-main">
+            <h3 class="post-title"><a href="posts/泛微e-mobile-clientcdnfile-任意文件读取漏洞.html">泛微E-Mobile clientcdnfile 任意文件读取漏洞</a></h3>
+            <p class="post-excerpt"># 泛微E-Mobile clientcdnfile 任意文件读取漏洞 # 漏洞描述 泛微E-Mobile是一款由泛微网</p>
+          </div>
+          <div class="post-meta"><span class="tag">随笔</span></div>
+        </li>
+
+        <li class="post-item">
+          <time class="post-date" datetime="2026-09-14">2026-09-14</time>
+          <div class="post-main">
+            <h3 class="post-title"><a href="posts/亿赛通-电子文档安全管理系统-文件读取.html">亿赛通-电子文档安全管理系统-文件读取</a></h3>
+            <p class="post-excerpt"># 亿赛通-电子文档安全管理系统-文件读取 ``` fofa：app=&quot;亿赛通-电子文档安全管理系统&quot; || body=</p>
+          </div>
+          <div class="post-meta"><span class="tag">随笔</span></div>
+        </li>
+
+        <li class="post-item">
+          <time class="post-date" datetime="2026-09-14">2026-09-14</time>
+          <div class="post-main">
+            <h3 class="post-title"><a href="posts/d-link-nas设备-sc-mgr-cgi-未授权rce漏洞.html">D-Link NAS设备 sc_mgr.cgi 未授权RCE漏洞</a></h3>
+            <p class="post-excerpt">D-Link NAS设备 /cgi-bin/sc_mgr.cgi?cmd=SC_Get_Info 接口存在远程命令执行漏洞，未经身份验证的远程攻击者可利用此漏洞</p>
+          </div>
+          <div class="post-meta"><span class="tag">漏洞复现</span></div>
+        </li>
+
+        <li class="post-item">
+          <time class="post-date" datetime="2026-02-02">2026-02-02</time>
+          <div class="post-main">
+            <h3 class="post-title"><a href="posts/reading-notes.html">读书笔记：把书读薄的三个动作</a></h3>
+            <p class="post-excerpt">读书笔记：把书读薄的三个动作——摘录、质疑、复述。</p>
+          </div>
+          <div class="post-meta"><span class="tag">读书</span></div>
+        </li>
+
+        <li class="post-item">
+          <time class="post-date" datetime="2026-01-20">2026-01-20</time>
+          <div class="post-main">
+            <h3 class="post-title"><a href="posts/static-blog-security.html">静态博客的安全上线清单</a></h3>
+            <p class="post-excerpt">静态博客部署到云服务器时的安全清单：CSP、响应头、Nginx 与权限。</p>
+          </div>
+          <div class="post-meta"><span class="tag">安全</span></div>
+        </li>
+
+        <li class="post-item">
+          <time class="post-date" datetime="2026-01-12">2026-01-12</time>
+          <div class="post-main">
+            <h3 class="post-title"><a href="posts/hello-world.html">你好，世界：为什么还要写博客</a></h3>
+            <p class="post-excerpt">你好，世界：为什么还要写博客——杰杰的博客开篇。</p>
+          </div>
+          <div class="post-meta"><span class="tag">随笔</span></div>
+        </li>
+
+</ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>© 2026 杰杰的博客 · 用静态页认真写字</p>
+      <div class="footer-links">
+        <a href="posts.html">文章</a>
+        <a href="about.html">关于</a>
+        <a href="SECURITY.md">安全说明</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <title>登录 · 杰杰的博客</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin/login.css">
+  <script src="/admin/login.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <a class="brand" href="/">
+        <svg class="brand-seal" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="12" fill="#C4512B"/>
+          <rect x="5" y="5" width="54" height="54" rx="8" fill="none" stroke="#F3EFE6" stroke-width="2.5" opacity="0.9"/>
+          <text x="32" y="41" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#F3EFE6">杰</text>
+        </svg>
+        <div>
+          <strong>杰杰的博客</strong>
+          <span>Admin</span>
+        </div>
+      </a>
+
+      <p class="eyebrow">Sign in</p>
+      <h1>登录写作</h1>
+      <p class="sub">登录后可发布、修改与删除文章。</p>
+
+      <form id="form" autocomplete="on">
+        <label>
+          <span>用户名</span>
+          <div class="field">
+            <input id="username" name="username" type="text" autocomplete="username" required placeholder="admin">
+          </div>
+        </label>
+        <label>
+          <span>密码</span>
+          <div class="field">
+            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="输入密码">
+            <button type="button" class="toggle-pass" id="toggle-pass" aria-label="显示或隐藏密码">显示</button>
+          </div>
+        </label>
+        <button type="submit" id="btn">登录</button>
+      </form>
+      <div class="status" id="status" role="status"></div>
+      <div class="foot"><a href="/">返回博客</a></div>
+    </div>
+  </div>
+</body>
+</html>
