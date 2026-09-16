@@ -1275,7 +1275,7 @@ def insert_into_index_html(item_html: str) -> None:
 
 def _one_line(s) -> str:
     """把多行文本压成单行，避免换行注入 markdown front matter 字段。"""
-    return " ".join(str(s or "").splitlines())
+    return re.sub(r"\s+", " ", str(s or "")).strip()
 
 
 def save_post(payload: dict) -> dict:
