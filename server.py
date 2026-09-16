@@ -1273,12 +1273,17 @@ def insert_into_index_html(item_html: str) -> None:
     path.write_text(text[:insert_at] + item_html + text[insert_at:], encoding="utf-8")
 
 
+def _one_line(s) -> str:
+    """把多行文本压成单行，避免换行注入 markdown front matter 字段。"""
+    return " ".join(str(s or "").splitlines())
+
+
 def save_post(payload: dict) -> dict:
-    title = (payload.get("title") or "").strip()
+    title = _one_line(payload.get("title"))
     tag = normalize_tag(payload.get("tag") or "随笔")
     group = normalize_group(payload.get("group") or "")
-    date_iso = (payload.get("date") or date.today().isoformat()).strip()
-    excerpt = (payload.get("excerpt") or "").strip()
+    date_iso = _one_line(payload.get("date") or date.today().isoformat())
+    excerpt = _one_line(payload.get("excerpt"))
     md = payload.get("content") or ""
     md = _strip_front_matter(md)
     raw_slug = (payload.get("slug") or "").strip()
@@ -2673,7 +2678,8 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError as e:
                 return self._json(400, {"ok": False, "error": str(e)})
             except Exception as e:
-                return self._json(500, {"ok": False, "error": str(e)})
+                _log_internal_error("POST " + path, e)
+                return self._json(500, {"ok": False, "error": "服务器内部错误"})
 
         if path == "/api/posts/save":
             sess = self._session(cfg)
@@ -2701,6 +2707,12 @@ class Handler(BaseHTTPRequestHandler):
             slug = str(payload.get("slug") or "").strip()
             if not slug:
                 return self._json(400, {"ok": False, "error": "缺少 slug"})
+            # 安全：slug 会被拼进路径做存在性判断，必须严格校验，
+            # 否则可借 ../index 之类探测 posts 目录外的文件并污染 pins.json。
+            try:
+                slug = _valid_slug(slug)
+            except ValueError:
+                return self._json(400, {"ok": False, "error": "slug 无效"})
             pinned = bool(payload.get("pinned"))
             try:
                 with _lock:

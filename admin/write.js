@@ -27,7 +27,7 @@
 
   function esc(s) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
   function sanitizeUrl(url) {
     var u = String(url || "").trim().replace(/[\s\u0000-\u001f]+/g, "");
@@ -541,10 +541,13 @@
     e.preventDefault();
     setStatus("正在上传粘贴的图片…");
     Promise.all(files.map(function (f, idx) {
-      return uploadPastedImage(f).then(function (url) {
-        var alt = (f.name || ("图片" + (idx + 1))).replace(/\.[^.]+$/, "");
-        return "![" + alt + "](" + url + ")";
-      });
+        return uploadPastedImage(f).then(function (url) {
+          var alt = (f.name || ("图片" + (idx + 1))).replace(/\.[^.]+$/, "");
+          // 过滤 markdown 图片语法保留字符，避免破坏正文结构
+          alt = alt.split("[").join("").split("]").join("")
+            .split("(").join("").split(")").join("");
+          return "![" + alt + "](" + url + ")";
+        });
     })).then(function (mds) {
       insertAtCursor(mds.join("\n\n"));
       setStatus("已插入 " + mds.length + " 张图片", "ok");
