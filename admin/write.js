@@ -7,6 +7,7 @@
     title: document.getElementById("title"),
     date: document.getElementById("date"),
     tag: document.getElementById("tag"),
+    group: document.getElementById("group"),
     excerpt: document.getElementById("excerpt"),
     content: document.getElementById("content"),
     original: document.getElementById("original-slug"),
@@ -271,6 +272,15 @@
     }).join("");
   }
 
+  function fillGroupOptions(groups) {
+    var dl = document.getElementById("group-options");
+    if (!dl) return;
+    var list = groups || [];
+    dl.innerHTML = list.map(function (t) {
+      return "<option>" + esc(t) + "</option>";
+    }).join("");
+  }
+
   function setStatus(msg, cls) {
     els.status.textContent = msg;
     els.status.className = "status" + (cls ? " " + cls : "");
@@ -303,6 +313,7 @@
     els.excerpt.value = "";
     els.content.value = "";
     els.tag.value = "随笔";
+    if (els.group) els.group.value = "";
     setMode(false);
     renderPreview();
   }
@@ -376,6 +387,7 @@
         els.title.value = p.title || "";
         els.date.value = p.date || "";
         els.tag.value = p.tag || "随笔";
+        if (els.group) els.group.value = p.group || "";
         els.excerpt.value = p.excerpt || "";
         els.content.value = p.content || "";
         if (!p.has_md && !p.content) {
@@ -406,6 +418,7 @@
         title: title,
         date: els.date.value,
         tag: els.tag.value,
+        group: els.group ? els.group.value.trim() : "",
         excerpt: els.excerpt.value.trim(),
         content: els.content.value,
         slug: slugFromTitle(title),
@@ -460,6 +473,85 @@
   }
 
   els.content.addEventListener("input", renderPreview);
+
+  // 粘贴图片 → 上传并插入 Markdown
+  function insertAtCursor(text) {
+    var ta = els.content;
+    var start = ta.selectionStart || 0;
+    var end = ta.selectionEnd || 0;
+    var val = ta.value;
+    var before = val.slice(0, start);
+    var after = val.slice(end);
+    // 若前面不是行首/空行，补换行
+    if (before && !/\n$/.test(before)) before += "\n";
+    if (after && !/^\n/.test(after)) after = "\n" + after;
+    ta.value = before + text + after;
+    var pos = before.length + text.length;
+    ta.selectionStart = ta.selectionEnd = pos;
+    ta.focus();
+    renderPreview();
+  }
+
+  function uploadPastedImage(file) {
+    if (!file || !/^image\//.test(file.type)) {
+      return Promise.reject(new Error("仅支持图片文件"));
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return Promise.reject(new Error("图片超过 5MB"));
+    }
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var result = String(reader.result || "");
+        var comma = result.indexOf(",");
+        var b64 = comma >= 0 ? result.slice(comma + 1) : "";
+        fetch("/api/posts/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            csrf: csrf,
+            filename: file.name || "paste.png",
+            data: b64
+          })
+        }).then(function (res) {
+          return res.json().then(function (data) {
+            if (res.ok && data.ok) resolve(data.url);
+            else reject(new Error(data.error || "上传失败"));
+          });
+        }).catch(reject);
+      };
+      reader.onerror = function () { reject(new Error("读取失败")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  els.content.addEventListener("paste", function (e) {
+    var dt = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+    if (!dt || !dt.items) return;
+    var files = [];
+    for (var i = 0; i < dt.items.length; i++) {
+      var it = dt.items[i];
+      if (it.kind === "file") {
+        var f = it.getAsFile();
+        if (f && /^image\//.test(f.type)) files.push(f);
+      }
+    }
+    if (!files.length) return;
+    e.preventDefault();
+    setStatus("正在上传粘贴的图片…");
+    Promise.all(files.map(function (f, idx) {
+      return uploadPastedImage(f).then(function (url) {
+        var alt = (f.name || ("图片" + (idx + 1))).replace(/\.[^.]+$/, "");
+        return "![" + alt + "](" + url + ")";
+      });
+    })).then(function (mds) {
+      insertAtCursor(mds.join("\n\n"));
+      setStatus("已插入 " + mds.length + " 张图片", "ok");
+    }).catch(function (err) {
+      setStatus(err.message || "图片上传失败", "err");
+    });
+  });
 
   var excerptGen = document.getElementById("excerpt-gen");
   if (excerptGen) {
@@ -708,6 +800,7 @@
         els.title.value = data.title || "";
         els.date.value = data.date || "";
         els.tag.value = data.tag || "随笔";
+        if (els.group) els.group.value = data.group || "";
         els.excerpt.value = data.excerpt || "";
         els.content.value = data.content || "";
         renderPreview();
@@ -742,6 +835,7 @@
   document.getElementById("draft-btn").addEventListener("click", function () {
     localStorage.setItem("jiejie-write-draft", JSON.stringify({
       title: els.title.value, date: els.date.value, tag: els.tag.value,
+      group: els.group ? els.group.value : "",
       excerpt: els.excerpt.value, content: els.content.value
     }));
     setStatus("草稿已存到浏览器本地", "ok");
@@ -754,6 +848,7 @@
       els.title.value = d.title || "";
       els.date.value = d.date || els.date.value;
       els.tag.value = d.tag || "随笔";
+      if (els.group) els.group.value = d.group || "";
       els.excerpt.value = d.excerpt || "";
       els.content.value = d.content || "";
       setMode(false);
@@ -780,6 +875,7 @@
         els.who.innerHTML = "已登录：<b>" + esc(data.user) + "</b>";
         if (!els.date.value) els.date.value = data.today;
         fillTagOptions(data.tags);
+        fillGroupOptions(data.groups);
         if (!els.tag.value) els.tag.value = "随笔";
         setMode(false);
         renderPreview();

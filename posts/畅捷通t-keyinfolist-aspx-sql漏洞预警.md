@@ -2,6 +2,7 @@
 title: 畅捷通T+ KeyInfoList.aspx SQL漏洞预警
 date: 2026-09-14
 tag: 随笔
+group: 安全漏洞
 excerpt: 由于畅捷通T+的KeyInfoList.aspx接口处未对用户的输入进行过滤和校验，未经身份验证的攻击者除了可以利用 SQL 注入漏洞获取数据库中的信息
 ---
 

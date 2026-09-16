@@ -84,16 +84,23 @@
           </datalist>
         </label>
       </div>
-      <label>
-        <span class="label-row">
-          摘要（显示在目录里）
-          <button type="button" class="btn-mini" id="excerpt-gen">自动生成</button>
-        </span>
-        <input id="excerpt" type="text" maxlength="80" placeholder="留空发布时也会自动从正文提取">
-      </label>
+      <div class="row row-2">
+        <label>
+          分组
+          <input id="group" type="text" list="group-options" placeholder="可选，同一分组的文章会互相推荐" maxlength="24" autocomplete="off">
+          <datalist id="group-options"></datalist>
+        </label>
+        <label>
+          <span class="label-row">
+            摘要（显示在目录里）
+            <button type="button" class="btn-mini" id="excerpt-gen">自动生成</button>
+          </span>
+          <input id="excerpt" type="text" maxlength="80" placeholder="留空发布时也会自动从正文提取">
+        </label>
+      </div>
       <label>
         正文（Markdown）
-        <textarea id="content" placeholder="## 小节标题&#10;&#10;普通段落。支持 **加粗**、*斜体*、`代码`、列表、引用、代码块。"></textarea>
+        <textarea id="content" placeholder="## 小节标题&#10;&#10;可直接 Ctrl+V 粘贴图片。支持 **加粗**、列表、表格、代码块。"></textarea>
       </label>
       <p class="toolbar-note">
         写法示例：<code>## 标题</code> · <code>- 列表</code> · <code>&gt; 引用</code> · <code>``` 代码 ```</code>

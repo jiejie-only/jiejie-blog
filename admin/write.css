@@ -129,7 +129,8 @@
       border-color: var(--cinnabar);
     }
     .row { display: grid; grid-template-columns: 1.2fr 1fr 0.8fr; gap: .65rem; }
-    @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+    .row-2 { grid-template-columns: 0.9fr 1.3fr; }
+    @media (max-width: 520px) { .row, .row-2 { grid-template-columns: 1fr; } }
     .mode-bar {
       display: flex;
       align-items: center;

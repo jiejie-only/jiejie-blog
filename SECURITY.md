@@ -14,6 +14,7 @@
 | 路径防护 | 静态服务拒绝 `data/`、`tools/`、点文件、`..` 穿越 |
 | 前端 | 无 CDN；主题偏好仅存 localStorage |
 | Markdown XSS | 标题/摘要/正文 HTML 转义；链接与图片 URL 消毒，拒绝 `javascript:` / 危险 `data:` |
+| 粘贴/上传图片 | 需登录+CSRF；仅 PNG/JPEG/GIF/WebP 按魔数校验；≤5MB；随机文件名；每会话 10 分钟约 24 次；单日约 120 张 |
 | 体积限制 | 单篇正文约 800KB 上限 |
 | 路径 | slug 自动规范化；静态拒绝 `..`、`data/`、`tools/`、点文件 |
 

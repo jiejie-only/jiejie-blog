@@ -144,21 +144,48 @@
     if (filterBar) {
       var items = document.querySelectorAll("[data-tags]");
       var empty = document.getElementById("empty-state");
+      var params = new URLSearchParams(location.search);
+      var activeGroup = params.get("group") || "";
 
-      // 按文章实际标签生成筛选按钮（支持自定义标签）
+      function applyFilter(tag, group) {
+        var visible = 0;
+        items.forEach(function (item) {
+          var tags = (item.getAttribute("data-tags") || "").split(/\s+/);
+          var g = item.getAttribute("data-group") || "";
+          var okTag = !tag || tag === "all" || tags.indexOf(tag) !== -1;
+          var okGroup = !group || g === group;
+          var show = okTag && okGroup;
+          item.hidden = !show;
+          if (show) visible += 1;
+        });
+        if (empty) empty.hidden = visible !== 0;
+        var note = document.getElementById("group-filter-note");
+        if (note) {
+          if (group) {
+            note.hidden = false;
+            note.textContent = "正在筛选分组：" + group;
+          } else {
+            note.hidden = true;
+          }
+        }
+      }
+
       var tagSet = [];
+      var groupSet = [];
       items.forEach(function (item) {
         var raw = item.getAttribute("data-tags") || "";
         raw.split(/\s+/).forEach(function (t) {
           if (t && tagSet.indexOf(t) === -1) tagSet.push(t);
         });
+        var g = item.getAttribute("data-group") || "";
+        if (g && groupSet.indexOf(g) === -1) groupSet.push(g);
       });
       filterBar.innerHTML = "";
       var allBtn = document.createElement("button");
       allBtn.type = "button";
       allBtn.className = "filter-btn";
       allBtn.setAttribute("data-filter", "all");
-      allBtn.setAttribute("aria-pressed", "true");
+      allBtn.setAttribute("aria-pressed", activeGroup ? "false" : "true");
       allBtn.textContent = "全部";
       filterBar.appendChild(allBtn);
       tagSet.forEach(function (t) {
@@ -170,23 +197,33 @@
         btn.textContent = t;
         filterBar.appendChild(btn);
       });
+      groupSet.forEach(function (g) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "filter-btn filter-btn-group";
+        btn.setAttribute("data-group-filter", g);
+        btn.setAttribute("aria-pressed", activeGroup === g ? "true" : "false");
+        btn.textContent = "组 · " + g;
+        filterBar.appendChild(btn);
+      });
 
       filterBar.addEventListener("click", function (event) {
         var btn = event.target.closest(".filter-btn");
         if (!btn) return;
-        var tag = btn.getAttribute("data-filter");
         filterBar.querySelectorAll(".filter-btn").forEach(function (b) {
           b.setAttribute("aria-pressed", b === btn ? "true" : "false");
         });
-        var visible = 0;
-        items.forEach(function (item) {
-          var tags = (item.getAttribute("data-tags") || "").split(/\s+/);
-          var show = tag === "all" || tags.indexOf(tag) !== -1;
-          item.hidden = !show;
-          if (show) visible += 1;
-        });
-        if (empty) empty.hidden = visible !== 0;
+        if (btn.hasAttribute("data-group-filter")) {
+          activeGroup = btn.getAttribute("data-group-filter");
+          applyFilter("all", activeGroup);
+        } else {
+          var tag = btn.getAttribute("data-filter");
+          if (tag === "all") activeGroup = "";
+          applyFilter(tag, activeGroup);
+        }
       });
+
+      if (activeGroup) applyFilter("all", activeGroup);
     }
   });
 })();

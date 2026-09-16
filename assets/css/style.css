@@ -695,6 +695,87 @@ main {
   background: var(--cinnabar-soft);
 }
 
+.group-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.group-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 9.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.group-chip:hover {
+  color: inherit;
+  border-color: var(--moss);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.group-chip-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-chip-meta {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--haze);
+  letter-spacing: 0.02em;
+}
+
+.group-chip-empty {
+  cursor: default;
+  color: var(--haze);
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.group-chip-empty:hover {
+  border-color: var(--line);
+  transform: none;
+  box-shadow: none;
+}
+
+.group-tag {
+  display: inline-flex;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--moss) 35%, var(--line));
+  color: var(--moss);
+  background: var(--moss-soft);
+  font-size: 0.72rem;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+
+.group-tag:hover {
+  color: var(--cinnabar);
+  border-color: color-mix(in srgb, var(--cinnabar) 40%, var(--line));
+}
+
+.filter-btn-group {
+  border-style: dashed;
+}
+
+.group-filter-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--moss);
+}
+
 /* —— 筛选 —— */
 .filter-bar {
   display: flex;
@@ -995,6 +1076,44 @@ main {
   margin-top: 3.5rem;
   padding-top: 1.75rem;
   border-top: 1px solid var(--line);
+}
+
+.related-posts {
+  margin-top: 2.5rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.related-posts h2 {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+}
+
+.related-posts ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.related-posts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 0.95rem;
+}
+
+.related-posts li:last-child { border-bottom: 0; }
+.related-posts li span {
+  color: var(--haze);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  flex-shrink: 0;
 }
 
 /* —— 关于 —— */

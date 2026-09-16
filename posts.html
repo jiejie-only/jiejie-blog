@@ -60,18 +60,19 @@
     <div class="filter-bar" id="filter-bar" role="toolbar" aria-label="按标签筛选">
       <button class="filter-btn" type="button" data-filter="all" aria-pressed="true">全部</button>
     </div>
+    <p id="group-filter-note" class="group-filter-note" hidden></p>
 
     <ul class="post-list" style="margin-top: 1rem;">
-      <li class="post-item is-pinned" data-tags="随笔">
+      <li class="post-item is-pinned" data-tags="随笔" data-group="安全漏洞">
         <time class="post-date" datetime="2026-09-14">2026-09-14</time>
         <div class="post-main">
           <h2 class="post-title"><span class="pin-badge">置顶</span><a href="posts/畅捷通t-keyinfolist-aspx-sql漏洞预警.html">畅捷通T+ KeyInfoList.aspx SQL漏洞预警</a></h2>
           <p class="post-excerpt">由于畅捷通T+的KeyInfoList.aspx接口处未对用户的输入进行过滤和校验，未经身份验证的攻击者除了可以利用 SQL 注入漏洞获取数据库中的信息</p>
         </div>
-        <div class="post-meta"><span class="tag">随笔</span><span>约 1 分钟</span></div>
+        <div class="post-meta"><span class="tag">随笔</span><a class="group-tag" href="posts.html?group=%E5%AE%89%E5%85%A8%E6%BC%8F%E6%B4%9E">安全漏洞</a><span>约 1 分钟</span></div>
       </li>
 
-      <li class="post-item" data-tags="随笔">
+      <li class="post-item" data-tags="随笔" data-group="">
         <time class="post-date" datetime="2026-09-14">2026-09-14</time>
         <div class="post-main">
           <h2 class="post-title"><a href="posts/泛微e-mobile-clientcdnfile-任意文件读取漏洞.html">泛微E-Mobile clientcdnfile 任意文件读取漏洞</a></h2>
@@ -80,7 +81,7 @@
         <div class="post-meta"><span class="tag">随笔</span><span>约 2 分钟</span></div>
       </li>
 
-      <li class="post-item" data-tags="随笔">
+      <li class="post-item" data-tags="随笔" data-group="">
         <time class="post-date" datetime="2026-09-14">2026-09-14</time>
         <div class="post-main">
           <h2 class="post-title"><a href="posts/亿赛通-电子文档安全管理系统-文件读取.html">亿赛通-电子文档安全管理系统-文件读取</a></h2>
@@ -89,7 +90,16 @@
         <div class="post-meta"><span class="tag">随笔</span><span>约 1 分钟</span></div>
       </li>
 
-      <li class="post-item" data-tags="漏洞复现">
+      <li class="post-item" data-tags="随笔" data-group="test">
+        <time class="post-date" datetime="2026-09-14">2026-09-14</time>
+        <div class="post-main">
+          <h2 class="post-title"><a href="posts/test.html">test</a></h2>
+          <p class="post-excerpt">test</p>
+        </div>
+        <div class="post-meta"><span class="tag">随笔</span><a class="group-tag" href="posts.html?group=test">test</a><span>约 1 分钟</span></div>
+      </li>
+
+      <li class="post-item" data-tags="漏洞复现" data-group="">
         <time class="post-date" datetime="2026-09-14">2026-09-14</time>
         <div class="post-main">
           <h2 class="post-title"><a href="posts/d-link-nas设备-sc-mgr-cgi-未授权rce漏洞.html">D-Link NAS设备 sc_mgr.cgi 未授权RCE漏洞</a></h2>
@@ -98,7 +108,7 @@
         <div class="post-meta"><span class="tag">漏洞复现</span><span>约 1 分钟</span></div>
       </li>
 
-      <li class="post-item" data-tags="读书">
+      <li class="post-item" data-tags="读书" data-group="">
         <time class="post-date" datetime="2026-02-02">2026-02-02</time>
         <div class="post-main">
           <h2 class="post-title"><a href="posts/reading-notes.html">读书笔记：把书读薄的三个动作</a></h2>
@@ -107,7 +117,7 @@
         <div class="post-meta"><span class="tag">读书</span><span>约 1 分钟</span></div>
       </li>
 
-      <li class="post-item" data-tags="安全">
+      <li class="post-item" data-tags="安全" data-group="">
         <time class="post-date" datetime="2026-01-20">2026-01-20</time>
         <div class="post-main">
           <h2 class="post-title"><a href="posts/static-blog-security.html">静态博客的安全上线清单</a></h2>
@@ -116,7 +126,7 @@
         <div class="post-meta"><span class="tag">安全</span><span>约 1 分钟</span></div>
       </li>
 
-      <li class="post-item" data-tags="随笔">
+      <li class="post-item" data-tags="随笔" data-group="">
         <time class="post-date" datetime="2026-01-12">2026-01-12</time>
         <div class="post-main">
           <h2 class="post-title"><a href="posts/hello-world.html">你好，世界：为什么还要写博客</a></h2>

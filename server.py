@@ -280,6 +280,144 @@ def collect_tags() -> list[str]:
             ordered.append(t)
     return ordered
 
+
+def normalize_group(raw: str) -> str:
+    """分组名：可自定义，空则不分组。"""
+    g = re.sub(r"\s+", " ", (raw or "").strip())
+    g = re.sub(r'[<>&"\'`\\/]', "", g)
+    g = g.strip(".,;:，。；：")
+    return g[:24]
+
+
+def collect_groups() -> list[str]:
+    used: list[str] = []
+    if not POSTS_DIR.exists():
+        return used
+    for md_path in POSTS_DIR.glob("*.md"):
+        try:
+            text = md_path.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        m = re.search(r"(?m)^group:\s*(.+)$", text)
+        if m:
+            g = normalize_group(m.group(1))
+            if g and g not in used:
+                used.append(g)
+    used.sort()
+    return used
+
+
+def build_related_html(slug: str, group: str) -> str:
+    """同分组的其它文章列表（文章页底部）。"""
+    group = normalize_group(group)
+    if not group:
+        return ""
+    others = [
+        p
+        for p in list_posts()
+        if normalize_group(p.get("group") or "") == group and p.get("slug") != slug
+    ]
+    if not others:
+        return ""
+    lis = "".join(
+        f'          <li><a href="{html.escape(p["slug"])}.html">{html.escape(p.get("title") or p["slug"])}</a>'
+        f'<span>{html.escape(p.get("date") or "")}</span></li>\n'
+        for p in others[:12]
+    )
+    return f"""
+        <section class="related-posts">
+          <h2>同组文章 · {html.escape(group)}</h2>
+          <ul>
+{lis}          </ul>
+        </section>
+"""
+
+
+UPLOAD_MAX_BYTES = 5 * 1024 * 1024
+UPLOAD_B64_MAX = 7 * 1024 * 1024  # base64 约 4/3 膨胀
+UPLOAD_RATE_WINDOW = 600
+UPLOAD_RATE_MAX = 24
+UPLOAD_DAY_MAX = 120
+_upload_hits: dict[str, list[float]] = {}
+_upload_lock = threading.Lock()
+
+
+def _check_upload_rate(user: str) -> None:
+    now = time.time()
+    key = user or "?"
+    with _upload_lock:
+        arr = [t for t in _upload_hits.get(key, []) if now - t < UPLOAD_RATE_WINDOW]
+        if len(arr) >= UPLOAD_RATE_MAX:
+            raise ValueError("上传过于频繁，请稍后再试")
+        arr.append(now)
+        _upload_hits[key] = arr
+
+
+def _sniff_image_ext(raw: bytes) -> str:
+    if raw.startswith(b"\x89PNG\r\n\x1a\n") and b"IHDR" in raw[:64]:
+        return ".png"
+    if raw.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    if raw.startswith(b"GIF87a") or raw.startswith(b"GIF89a"):
+        return ".gif"
+    if len(raw) > 12 and raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+        return ".webp"
+    raise ValueError("仅支持 PNG / JPEG / GIF / WebP（按文件头校验）")
+
+
+def save_pasted_image(filename: str, b64_data: str, user: str = "") -> str:
+    """保存粘贴/上传的图片，返回站内 URL。严格限制格式/大小/频率。"""
+    _check_upload_rate(user or "anon")
+    b64 = re.sub(r"\s+", "", b64_data or "")
+    if not b64:
+        raise ValueError("图片数据为空")
+    if len(b64) > UPLOAD_B64_MAX:
+        raise ValueError("图片过大（解码前上限约 5MB）")
+    try:
+        raw = base64.b64decode(b64, validate=True)
+    except Exception:
+        raise ValueError("图片数据无效（非合法 Base64）")
+    if len(raw) < 32:
+        raise ValueError("图片过小")
+    if len(raw) > UPLOAD_MAX_BYTES:
+        raise ValueError("图片过大（上限 5MB）")
+
+    ext = _sniff_image_ext(raw)
+
+    # GIF 内不应出现脚本字样（防老环境 polyglot）
+    if ext == ".gif" and re.search(
+        br"<script|javascript:|onerror\s*=", raw[:4096], re.I
+    ):
+        raise ValueError("GIF 内容不合法")
+
+    # 不使用用户文件名做落盘名，避免路径/特殊字符问题
+    token = secrets.token_hex(8)
+    stem = _safe_filename(Path(filename or "paste").stem, "paste")
+    # 仅保留短 ASCII/数字前缀，避免超长与怪异字符
+    stem = re.sub(r"[^0-9A-Za-z_\-]{1,24}", "", stem)[:24] or "img"
+    fname = f"{stem}_{token}{ext}"
+
+    day = date.today().strftime("%Y%m%d")
+    folder = UPLOADS_DIR / "_paste" / day
+    folder.mkdir(parents=True, exist_ok=True)
+
+    existing = list(folder.glob(f"*{ext}"))
+    if len(existing) >= UPLOAD_DAY_MAX:
+        raise ValueError("今日上传过多，请清理 uploads/_paste 或稍后再试")
+
+    target = folder / fname
+    if target.exists():
+        raise ValueError("文件名冲突，请重试")
+    target.write_bytes(raw)
+    # 公开只读
+    try:
+        target.chmod(0o644)
+    except Exception:
+        pass
+    rel = target.relative_to(ROOT).as_posix()
+    return "/" + rel
+
+
 _lock = threading.Lock()
 _sessions: dict[str, dict] = {}
 _login_attempts: dict[str, list[float]] = {}
@@ -353,16 +491,17 @@ def create_session(cfg: dict) -> str:
     exp = time.time() + SESSION_TTL_HOURS * 3600
     with _lock:
         _sessions[sid] = {"csrf": csrf, "exp": exp, "user": cfg["username"]}
-    return sign(f"{sid}|{csrf}", cfg["secret"])
+    # 使用 URL 安全字符，避免 | 等导致部分客户端丢弃 Cookie
+    return sign(f"{sid}.{csrf}", cfg["secret"])
 
 
 def load_session(cookie_val: str | None, cfg: dict) -> dict | None:
     if not cookie_val:
         return None
     raw = unsign(cookie_val, cfg["secret"])
-    if not raw or "|" not in raw:
+    if not raw or "." not in raw:
         return None
-    sid, csrf = raw.split("|", 1)
+    sid, csrf = raw.split(".", 1)
     with _lock:
         sess = _sessions.get(sid)
         if not sess:
@@ -379,23 +518,29 @@ def destroy_session(cookie_val: str | None, cfg: dict) -> None:
     if not cookie_val:
         return
     raw = unsign(cookie_val, cfg["secret"])
-    if not raw or "|" not in raw:
+    if not raw or "." not in raw:
         return
-    sid = raw.split("|", 1)[0]
+    sid = raw.split(".", 1)[0]
     with _lock:
         _sessions.pop(sid, None)
 
 
 def check_rate_limit(ip: str) -> bool:
+    """仅判断是否超限，不在此记账（成功/失败由调用方决定）。"""
     now = time.time()
     window = 300
     with _lock:
         arr = [t for t in _login_attempts.get(ip, []) if now - t < window]
         _login_attempts[ip] = arr
-        if len(arr) >= 8:
-            return False
+        return len(arr) < 8
+
+
+def record_login_fail(ip: str) -> None:
+    now = time.time()
+    with _lock:
+        arr = [t for t in _login_attempts.get(ip, []) if now - t < 300]
         arr.append(now)
-        return True
+        _login_attempts[ip] = arr
 
 
 # ---------- Markdown ----------
@@ -787,7 +932,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
         <div class="prose">
           {body}
         </div>
-        <footer class="article-footer">
+{related}        <footer class="article-footer">
           <a class="btn btn-ghost" href="../posts.html">返回目录</a>
         </footer>
       </article>
@@ -807,13 +952,13 @@ POST_TEMPLATE = """<!DOCTYPE html>
 </html>
 """
 
-ITEM_POSTS = """      <li class="post-item{pin_cls}" data-tags="{tag}">
+ITEM_POSTS = """      <li class="post-item{pin_cls}" data-tags="{tag}" data-group="{group}">
         <time class="post-date" datetime="{date_iso}">{date_iso}</time>
         <div class="post-main">
           <h2 class="post-title">{pin_badge}<a href="posts/{slug}.html">{title}</a></h2>
           <p class="post-excerpt">{excerpt}</p>
         </div>
-        <div class="post-meta"><span class="tag">{tag}</span><span>约 {minutes} 分钟</span></div>
+        <div class="post-meta"><span class="tag">{tag}</span>{group_badge}<span>约 {minutes} 分钟</span></div>
       </li>
 """
 
@@ -823,9 +968,92 @@ ITEM_HOME = """        <li class="post-item{pin_cls}">
             <h3 class="post-title">{pin_badge}<a href="posts/{slug}.html">{title}</a></h3>
             <p class="post-excerpt">{excerpt}</p>
           </div>
-          <div class="post-meta"><span class="tag">{tag}</span></div>
+          <div class="post-meta"><span class="tag">{tag}</span>{group_badge}</div>
         </li>
 """
+
+GROUP_CHIP = """        <a class="group-chip" href="posts.html?group={group_q}">
+          <span class="group-chip-name">{group}</span>
+          <span class="group-chip-meta">{count} 篇 · {date_iso}</span>
+        </a>
+"""
+
+
+def collect_group_stats() -> list[dict]:
+    """按最近编辑（文章文件 mtime 与日期取较新）排序的分组统计。"""
+    stats: dict[str, dict] = {}
+    for p in list_posts():
+        g = normalize_group(p.get("group") or "")
+        if not g:
+            continue
+        slug = p.get("slug") or ""
+        d = p.get("date") or ""
+        mtime = ""
+        hp = POSTS_DIR / f"{slug}.html"
+        if hp.exists():
+            mtime = datetime.fromtimestamp(hp.stat().st_mtime).strftime("%Y-%m-%d")
+        key = max(x for x in (d, mtime) if x)
+        if g not in stats:
+            stats[g] = {"group": g, "count": 0, "date": key}
+        stats[g]["count"] += 1
+        if key > (stats[g]["date"] or ""):
+            stats[g]["date"] = key
+    items = list(stats.values())
+    items.sort(key=lambda x: (x.get("date") or "", x["group"]), reverse=True)
+    return items
+
+
+def render_group_chips(limit: int = 8) -> str:
+    groups = collect_group_stats()[:limit]
+    if not groups:
+        return (
+            '        <div class="group-chip group-chip-empty">'
+            "还没有分组。在写作台填写「分组」后会出现在这里。</div>\n"
+        )
+    parts = []
+    for g in groups:
+        parts.append(
+            GROUP_CHIP.format(
+                group=html.escape(g["group"]),
+                group_q=html.escape(urllib_quote(g["group"]), quote=True),
+                count=g["count"],
+                date_iso=html.escape(g.get("date") or ""),
+            )
+        )
+    return "".join(parts)
+
+
+def urllib_quote(s: str) -> str:
+    from urllib.parse import quote
+
+    return quote(s, safe="")
+
+
+def render_list_item(p: dict, for_home: bool = False) -> str:
+    pinned = bool(p.get("pinned"))
+    pin_badge = '<span class="pin-badge">置顶</span>' if pinned else ""
+    pin_cls = " is-pinned" if pinned else ""
+    group = normalize_group(p.get("group") or "")
+    group_badge = (
+        f'<a class="group-tag" href="posts.html?group={html.escape(urllib_quote(group), quote=True)}">{html.escape(group)}</a>'
+        if group
+        else ""
+    )
+    tpl = ITEM_HOME if for_home else ITEM_POSTS
+    kwargs = dict(
+        pin_cls=pin_cls,
+        pin_badge=pin_badge,
+        tag=html.escape(p.get("tag") or "随笔"),
+        group=html.escape(group),
+        group_badge=group_badge,
+        date_iso=html.escape(p.get("date") or ""),
+        slug=html.escape(p.get("slug") or ""),
+        title=html.escape(p.get("title") or ""),
+        excerpt=html.escape((p.get("excerpt") or p.get("title") or "")[:120]),
+        minutes=p.get("minutes") or 1,
+    )
+    needed = set(re.findall(r"\{(\w+)\}", tpl))
+    return tpl.format(**{k: kwargs[k] for k in needed})
 
 
 def load_pins() -> list[str]:
@@ -854,25 +1082,6 @@ def set_pinned(slug: str, pinned: bool) -> list[str]:
         pins = [s for s in pins if s != slug]
     save_pins(pins)
     return pins
-
-
-def render_list_item(p: dict, for_home: bool = False) -> str:
-    pinned = bool(p.get("pinned"))
-    pin_badge = '<span class="pin-badge">置顶</span>' if pinned else ""
-    pin_cls = " is-pinned" if pinned else ""
-    tpl = ITEM_HOME if for_home else ITEM_POSTS
-    kwargs = dict(
-        pin_cls=pin_cls,
-        pin_badge=pin_badge,
-        tag=html.escape(p.get("tag") or "随笔"),
-        date_iso=html.escape(p.get("date") or ""),
-        slug=html.escape(p.get("slug") or ""),
-        title=html.escape(p.get("title") or ""),
-        excerpt=html.escape((p.get("excerpt") or p.get("title") or "")[:120]),
-        minutes=p.get("minutes") or 1,
-    )
-    needed = set(re.findall(r"\{(\w+)\}", tpl))
-    return tpl.format(**{k: kwargs[k] for k in needed})
 
 
 FEATURE_CARD = """        <a class="feature-card{featured_cls}" href="posts/{slug}.html">
@@ -993,6 +1202,15 @@ def rebuild_site_lists() -> None:
         if close_at > open_end:
             text = text[:open_end] + "\n" + cards + "      " + text[close_at:]
 
+    # 文章分组：最近编辑的前 8 个
+    gwrap = text.find('id="group-grid"')
+    if gwrap >= 0:
+        open_end = text.find(">", gwrap) + 1
+        close_div = text.find("</div>", open_end)
+        if open_end > 0 and close_div > open_end:
+            chips = render_group_chips(8)
+            text = text[:open_end] + "\n" + chips + "      " + text[close_div:]
+
     # 最新文章：仅非置顶
     section = text.find('id="latest-title"')
     if section >= 0:
@@ -1058,6 +1276,7 @@ def insert_into_index_html(item_html: str) -> None:
 def save_post(payload: dict) -> dict:
     title = (payload.get("title") or "").strip()
     tag = normalize_tag(payload.get("tag") or "随笔")
+    group = normalize_group(payload.get("group") or "")
     date_iso = (payload.get("date") or date.today().isoformat()).strip()
     excerpt = (payload.get("excerpt") or "").strip()
     md = payload.get("content") or ""
@@ -1080,6 +1299,7 @@ def save_post(payload: dict) -> dict:
     body = md_to_html(md, headings)
     minutes = estimate_minutes(md + excerpt)
     description = (excerpt or f"{title} — 杰杰的博客").replace('"', "'")
+    related = build_related_html(slug, group)
 
     html_page = POST_TEMPLATE.format(
         title=html.escape(title),
@@ -1090,18 +1310,30 @@ def save_post(payload: dict) -> dict:
         minutes=minutes,
         body=body,
         toc=toc_html,
+        related=related,
     )
 
     post_path = POSTS_DIR / f"{slug}.html"
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
     post_path.write_text(html_page, encoding="utf-8")
+    fm_group = f"group: {group}\n" if group else ""
     (POSTS_DIR / f"{slug}.md").write_text(
-        f"---\ntitle: {title}\ndate: {date_iso}\ntag: {tag}\nexcerpt: {excerpt}\n---\n\n{md}\n",
+        f"---\ntitle: {title}\ndate: {date_iso}\ntag: {tag}\n{fm_group}excerpt: {excerpt}\n---\n\n{md}\n",
         encoding="utf-8",
     )
 
     with _lock:
         rebuild_site_lists()
+        # 刷新同组其它文章的「同组文章」区块
+        if group:
+            for p in list_posts():
+                if p.get("slug") == slug:
+                    continue
+                if normalize_group(p.get("group") or "") == group:
+                    try:
+                        regen_post_related(p["slug"], group)
+                    except Exception:
+                        pass
 
     return {
         "ok": True,
@@ -1109,7 +1341,31 @@ def save_post(payload: dict) -> dict:
         "path": f"posts/{slug}.html",
         "url": f"/posts/{slug}.html",
         "minutes": minutes,
+        "group": group,
     }
+
+
+def regen_post_related(slug: str, group: str) -> None:
+    """更新单篇文章 HTML 中的同组区块（不重写 markdown）。"""
+    path = POSTS_DIR / f"{slug}.html"
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    related = build_related_html(slug, group)
+    # 移除旧 related 块
+    text = re.sub(
+        r'\n?\s*<section class="related-posts">[\s\S]*?</section>\n?',
+        "\n",
+        text,
+        count=1,
+    )
+    if related.strip():
+        text = text.replace(
+            '        <footer class="article-footer">',
+            related + '        <footer class="article-footer">',
+            1,
+        )
+    path.write_text(text, encoding="utf-8")
 
 
 SLUG_RE = re.compile(r"^[0-9A-Za-z\u4e00-\u9fff][0-9A-Za-z\u4e00-\u9fff_-]{0,79}$")
@@ -1172,7 +1428,9 @@ def list_posts() -> list[dict]:
             tag = meta.get("tag") or "随笔"
             date_iso = meta.get("date") or ""
             excerpt = meta.get("excerpt") or ""
+            group = meta.get("group") or ""
         else:
+            group = ""
             text = html_path.read_text(encoding="utf-8")
             m = re.search(r"<title>(.*?)·\s*杰杰的博客</title>", text, re.S)
             if m:
@@ -1191,6 +1449,7 @@ def list_posts() -> list[dict]:
                 "slug": slug,
                 "title": title or slug,
                 "tag": normalize_tag(tag),
+                "group": normalize_group(group),
                 "date": date_iso,
                 "excerpt": excerpt,
                 "has_md": md_path.exists(),
@@ -1214,6 +1473,7 @@ def load_post(slug: str) -> dict:
         raise FileNotFoundError("文章不存在")
 
     title = tag = date_iso = excerpt = ""
+    group = ""
     content = ""
     if md_path.exists():
         raw = md_path.read_text(encoding="utf-8")
@@ -1222,6 +1482,7 @@ def load_post(slug: str) -> dict:
         tag = meta.get("tag") or "随笔"
         date_iso = meta.get("date") or date.today().isoformat()
         excerpt = meta.get("excerpt") or ""
+        group = meta.get("group") or ""
     elif html_path.exists():
         text = html_path.read_text(encoding="utf-8")
         m = re.search(r"<title>(.*?)·\s*杰杰的博客</title>", text, re.S)
@@ -1232,7 +1493,6 @@ def load_post(slug: str) -> dict:
         tag = m.group(1).strip() if m else "随笔"
         m = re.search(r'name="description" content="([^"]*)"', text)
         excerpt = m.group(1) if m else ""
-        # 无 md 时正文无法完整还原，提示用户从 HTML 粘贴
         content = ""
 
     if not tag:
@@ -1242,6 +1502,7 @@ def load_post(slug: str) -> dict:
         "slug": slug,
         "title": title,
         "tag": tag,
+        "group": normalize_group(group),
         "date": date_iso,
         "excerpt": excerpt,
         "content": content,
@@ -2309,6 +2570,7 @@ class Handler(BaseHTTPRequestHandler):
                     "user": sess["user"],
                     "csrf": sess["csrf"],
                     "tags": collect_tags(),
+                    "groups": collect_groups(),
                     "today": date.today().isoformat(),
                 },
             )
@@ -2373,6 +2635,7 @@ class Handler(BaseHTTPRequestHandler):
             password_ok = verify_password(password, cfg)
             username_ok = hmac.compare_digest(username, str(cfg.get("username") or ""))
             if not (username_ok and password_ok):
+                record_login_fail(ip)
                 time.sleep(0.4)
                 return self._json(401, {"ok": False, "error": "用户名或密码错误"})
             token = create_session(cfg)
@@ -2392,6 +2655,25 @@ class Handler(BaseHTTPRequestHandler):
                 {"ok": True},
                 {"Set-Cookie": "jiejie_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"},
             )
+
+        if path == "/api/posts/upload-image":
+            sess = self._session(cfg)
+            if not sess:
+                return self._json(401, {"ok": False, "error": "请先登录"})
+            csrf = str(payload.get("csrf") or "")
+            if not hmac.compare_digest(csrf, sess["csrf"]):
+                return self._json(403, {"ok": False, "error": "CSRF 校验失败，请刷新页面"})
+            try:
+                url = save_pasted_image(
+                    str(payload.get("filename") or "paste.png"),
+                    str(payload.get("data") or ""),
+                    user=sess.get("user") or "",
+                )
+                return self._json(200, {"ok": True, "url": url})
+            except ValueError as e:
+                return self._json(400, {"ok": False, "error": str(e)})
+            except Exception as e:
+                return self._json(500, {"ok": False, "error": str(e)})
 
         if path == "/api/posts/save":
             sess = self._session(cfg)
